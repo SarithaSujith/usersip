@@ -2,15 +2,16 @@ import './App.css';
 import { useState, useEffect } from 'react';
 import { Map, Marker } from 'pigeon-maps';
 import { DateTime } from 'luxon';
+import { Card, ListGroup, ListGroupItem } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
 function App() {
 	const [ip, setIp] = useState('');
 	//const [data, setData] = useState();
 	const [location, setLocation] = useState({});
-	const [loading, setLoading] = useState(false);
-	const [coordinates, setCoordinates] = useState([48.87563, 9.39819]);
-	const [flagCode, setFlagCode] = useState('de');
-	const flag = ` https://flagcdn.com/20x15/${flagCode}.png`;
-	const flagAlt = `https://flagcdn.com/${flagCode}/codes.json`;
+	const [loading, setLoading] = useState(true);
+	const [coordinates, setCoordinates] = useState([]);
+	const [flagCode, setFlagCode] = useState('');
+
 	useEffect(() => {
 		setLoading(true);
 		const getData = async () => {
@@ -28,8 +29,13 @@ function App() {
 					// location
 					console.log(jsonResponse.location);
 					setLocation(jsonResponse.location);
+
+					setCoordinates([
+						jsonResponse.location.lat,
+						jsonResponse.location.lng,
+					]);
+					setFlagCode(jsonResponse.location.country.toLowerCase());
 					setLoading(false);
-					setCoordinates([jsonResponse.lat, jsonResponse.lng]);
 					console.log('setCoordinates', coordinates);
 				} else {
 					console.error('Request failed!');
@@ -40,31 +46,53 @@ function App() {
 		};
 		getData();
 	}, []);
+	console.log(coordinates);
+	//const myStyle = { width: '40rem',  align-items:'center' };
 	return (
-		<div>
-			<h2>IP ADDRESS</h2>
+		<div className='card border-info mb-5'>
 			{loading ? (
-				<p>loading..</p>
+				<ListGroupItem>loading..</ListGroupItem>
 			) : (
-				<p>
-					Your IP is: {ip}
-					<br />
-					your country: {location.country}
-					<br />
-					Your City: {location.city}
-				</p>
+				<Card>
+					<Map height={300} defaultCenter={coordinates} defaultZoom={11}>
+						<Marker width={50} anchor={coordinates} />
+					</Map>
+					<Card.Body>
+						<Card.Text style={{ width: '50rem', textAlign: ' center' }}>
+							{' '}
+							<h2>IP ADDRESS</h2>
+						</Card.Text>
+						<ListGroup
+							className='list-group-flush'
+							style={{ backgroundColor: 'blue' }}
+						>
+							<ListGroupItem>
+								<ListGroupItem>
+									<strong>Your IP is: </strong>
+									{ip}
+									<br />
+									<strong>your Country: </strong>
+									{location.country}
+									<br />
+									<strong>Your City: </strong>
+									{location.city}
+									<p>
+										<strong> Your Country Flag:</strong>{' '}
+										<img
+											src={`https://flagcdn.com/20x15/${flagCode}.png`}
+											alt={flagCode}
+										/>
+									</p>
+									<p>
+										<strong> Current Time:</strong>{' '}
+										{DateTime.local().toLocaleString(DateTime.DATETIME_FULL)}
+									</p>
+								</ListGroupItem>
+							</ListGroupItem>
+						</ListGroup>
+					</Card.Body>
+				</Card>
 			)}
-			{/* // <p>Your ip:{ip}</p> */}
-			{/* <p>Your City:{location.city}</p>
-            <p>Your Country:{location.country}</p> */}
-			<p>
-				Your Country flag:
-				<img src={flag} alt={flagAlt} />
-			</p>
-			<Map height={300} defaultCenter={coordinates} defaultZoom={11}>
-				<Marker width={50} anchor={coordinates} />
-			</Map>
-			<p> {DateTime.local().toLocaleString(DateTime.DATETIME_FULL)}</p>
 		</div>
 	);
 }
